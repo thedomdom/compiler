@@ -1,0 +1,32 @@
+these are identifiers
+12345
+abc123
+abc 123
+123.456
+"abc" "string with a \"-character"
+
+/* Mehrzeiliger Kommentar */
+
+-- Kommentar
+
+1234
+
+PROGRAM
+DECLARATIONS
+
+INPUT
+OUTPUT
+
+BEGIN
+END
+
+FOR
+;
+
+==
+
+=
+
++ - * /
+
+( )

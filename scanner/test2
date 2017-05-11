@@ -1,0 +1,6 @@
+/* error: string not closed */
+"asdb
+asdjhg"
+
+1234
+
