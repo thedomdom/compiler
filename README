@@ -1,0 +1,48 @@
+###############################################################################
+# Project:  COCKTAIL training
+# Descr:    Directory with all programming excercies
+# Kind:     README
+# Author:   Prof. Dr. Juergen Vollmer <vollmer@dhbw-karlsruhe.de>
+# $Id: README,v 1.14 2014/11/27 08:45:41 vollmer Exp $
+###############################################################################
+
+Files:
+	Makefile       create a tar archive, run all tests, etc.
+	config.mk      Setup some basic MAKE-variables, esp.
+		         $(COCKTAIL)   where is the Cocktail toolbox loacted
+		         $(TCL_INC)    Tcl/TK header files
+		         $(TCL_LIB)    Tcl/Tk library
+                       Here the usage of config.mk and common.mk is described.
+	common.mk      common makefile rules
+	README
+
+Contents of the sub directories
+===============================
+
+hello:    	   Using make
+dea:      	     An implementation of a  DFA (deterministic finite automaton)
+scanner:  	     A simple scanner generated with rex.
+recursive-decent:    A Recursive Decent parser for expressions
+recursive-decent-2:  A Recursive Decent parser for expressions, more complex grammar, no solution provided
+
+lr-parser:	     A LR-parser for an expression like language, grammer uses several nonterminals
+
+ast-c:		   Types, constructors etc for an AST implemented in plain C
+ast-java:	   Types, constructors etc for an AST implemented in plain JAVA
+
+expr:		   A parser for an expression language
+expr-calc:	   The parser with evaluation during parsing.
+expr-ast:	   The parser with tree construction using AST
+expr-eval:	   The parser with evaluation of the AST using PUMA
+expr-trip:         The parser with AST and a simple semantic analyis: check the correct names and
+                   number of arguments of function calls.
+expr-stmt:	   Extend the language with statements, like assignment, loops etc.
+expr-ag:           The expression parser with evaluation of the AST using an attribuite grammar
+
+calc-stmt:	   - An interpreter for a PASCAL-style pocket calculator
+
+
+expr-ast-epos:	   Build the Abstract Syntax Tree (AST) and compute correct
+		   begin / end positions for each expression.
+code-stack:	   Transformation of an AST and code generation for an
+		   expression language and a stack machine
