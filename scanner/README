@@ -21,4 +21,9 @@ The files:
 	l-solution.rex
 
 Exercice:
-  - complete the implementation of the scanner specification l.rex.
+  - complete the implementation of the scanner specification l.rex. --> Done
+  
+How to execute:
+  - make clean
+  - make
+  - make test
