@@ -110,8 +110,11 @@ DEFAULT {
 
 EOF {
   /* What should be done if the end-of-input-file has been reached? */
-  if (bracketCounter != 0) {
-      Message (" Klammerung falsch", xxError, l_scan_Attribute.Position);
+  if (bracketCounter > 0) {
+    Message (" Zu viele oeffnende Klammern!", xxError, l_scan_Attribute.Position);
+  }
+  else{
+      Message (" zu viele schliessende Klammern!", xxError, l_scan_Attribute.Position);
   }
 
   /* E.g.: check hat strings and comments are closed. */
@@ -123,7 +126,7 @@ EOF {
    Message ("Nicht abgeschlossene Stringkonstante", xxError, l_scan_Attribute.Position);
    break;
   case COMMENT:
-    Message ("Nicht abgeschlossener Kommentar", xxError, l_scan_Attribute.Position);
+    Message ("Nicht abgeschlossener mehrzeiliger Kommentar", xxError, l_scan_Attribute.Position);
     break;
   default:
     Message ("UUPSI: Das sollte nicht passieren!! Jeder macht mal Fehler...", xxFatal, l_scan_Attribute.Position);
@@ -139,13 +142,12 @@ DEFINE  /* some abbreviations */
       string = - {"\\\n\r\f} .
 
 /* define start states, note STD is defined by default, separate several states by a comma */
-/* START STRING */
 START STRING, COMMENT
 
 RULE
 
 /* Integers */
-#STD# digit+ :
+#STD# digit + :
 	{l_scan_Attribute.int_const.Value = malloc (l_scan_TokenLength+1);
 	 l_scan_GetWord (l_scan_Attribute.int_const.Value);
 	 return tok_int_const;
@@ -153,7 +155,7 @@ RULE
 
 /* Please add rules for: (don't forget to adapt main()) */
 /* Float numbers */
-#STD# digit* "." digit+ :
+#STD# digit * "." digit + :
 	{
 		l_scan_Attribute.float_const.Value = malloc(l_scan_TokenLength+1);
 		l_scan_GetWord(l_scan_Attribute.float_const.Value);
@@ -221,7 +223,7 @@ RULE
 #STD# < "--" ANY * > :
         { /* comment up to end of line, nothing to do */
 	  WritePosition (stdout, l_scan_Attribute.Position);
-	  printf (" -- Kommentar\n");
+	  printf (" Einzeiliger Kommentar\n");
         }
         
 /* C-style comment */
@@ -229,7 +231,7 @@ RULE
 	{ /**/
 	  yyStart (COMMENT);
 	  WritePosition (stdout, l_scan_Attribute.Position);
-	  printf (" Beginn des Kommentars\n");
+	  printf (" Beginn eines mehrzeiligen Kommentars\n");
 	}
 
 #COMMENT# - {*\n\t} + | "*" :
@@ -238,7 +240,7 @@ RULE
 #COMMENT# "*/" :
         {yyStart (STD);
 	 WritePosition (stdout, l_scan_Attribute.Position);
-	 printf (" Ende des Kommentars\n");
+	 printf (" Ende des mehrzeiligen Kommentars\n");
 	}
 
 /* double quote delimited strings */
