@@ -90,6 +90,9 @@ typedef union {
 GLOBAL {
   # include <stdlib.h>
   # include "rString.h"
+  
+  /* Variable for checking correct bracket nesting */
+  int bracketCounter = 0;
 } // GLOBAL
 
 LOCAL {
@@ -97,9 +100,6 @@ LOCAL {
   # define MAX_STRING_LEN 2048
   char string [MAX_STRING_LEN+1];
   int len;
-
-  /* Variable zur Ueberpruefung auf korrekt geklammerte Ausdruecke */
-  int bracketCounter = 0;
 }  // LOCAL
 
 DEFAULT {
@@ -113,8 +113,8 @@ EOF {
   if (bracketCounter > 0) {
     Message (" Zu viele oeffnende Klammern!", xxError, l_scan_Attribute.Position);
   }
-  else{
-      Message (" zu viele schliessende Klammern!", xxError, l_scan_Attribute.Position);
+  if (bracketCounter < 0) {
+      Message (" Zu viele schliessende Klammern!", xxError, l_scan_Attribute.Position);
   }
 
   /* E.g.: check hat strings and comments are closed. */
