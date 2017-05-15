@@ -1,0 +1,11 @@
+parser.o: parser.c expr_scan.h \
+   parser.h \
+  
+main.o: main.c  \
+   expr_scan.h \
+   parser.h
+expr_scan.o: expr_scan.c expr_scan.h \
+   expr_scanSource.h \
+  
+expr_scanSource.o: expr_scanSource.c expr_scanSource.h \
+  

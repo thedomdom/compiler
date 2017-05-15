@@ -1,0 +1,31 @@
+###############################################################################
+# Project:  COCKTAIL training
+# Descr:    A Recursive Decent Parser for expressions
+# Kind:     README
+# Author:   Prof. Dr. Juergen Vollmer <vollmer@dhbw-karlsruhe.de>
+# $Id: README,v 1.11 2014/11/27 08:39:09 vollmer Exp $
+###############################################################################
+
+This directory describes the implementation of a recursive decent parser for
+the following grammar (arithmetic expressions)
+
+    E ::= E "+" T   | T
+    T ::= T "*" F   | F
+    F ::= "(" E ")" | D
+    D ::= D "." identifier | D "[" E "]" | D "->" identifier | identifier
+
+The files:
+	expr.rex            REX scanner specifictaion
+	parser.h            Interface of the parser
+	parser.c            Stub of the recursive decent parser
+	main.c              C-main program
+	parser	            The executable to be produced
+	test.ok.*           test sources without syntax errors
+	test.err.*          test sources with    syntax errors
+	Makefile            README
+
+	parser-solution.c
+
+Exercice:
+  - complete the implementation of the recursive decent parser as given in
+    the file parser.c
