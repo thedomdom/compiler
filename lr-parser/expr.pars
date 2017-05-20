@@ -26,31 +26,152 @@ GLOBAL {
  # include <stdio.h>
 }
 
+PREC LEFT '<' '>' '=='
+     LEFT  '+' '-'
+     LEFT  '*' '/'
+
 RULE
 
-root = expr.
+root = sprache_x.
 
-expr = <
-	= expr '+' term
+sprache_x = <
+	= 'PROGRAM' identifier 'DECLARATIONS' decl_l codeblock
 	.
+> .
+
+decl_l  = <
+	= /* epsilon */
+	.
+ decl   = <
+	= inout typ identifier
+	.
+ > . /* decl */
+> . /* decl_l */
+
+inout = <
+	= 'INPUT'
+	.
+	= 'OUTPUT'
+	.
+	= /* epsilon */
+	.
+> .
+
+typ = <
+	= 'STING'
+	.
+	= 'INT'
+	.
+	= 'FLOAT'
+	.
+> .
+
+codeblock = <
+	= 'BEGIN' anw_l 'END.'
+	.
+> .
+
+anw_l   = <
+	= /* epsilon */
+	.
+ anw    = <
+	= zuwe
+	.
+	= ifelse
+	.
+	= whiledo
+	.
+	= fordo
+	.
+ > . /* anw */
+> . /* anw_l */
+
+
+ifelse = <
+	= 'IF' bed 'THEN' codeblock 'ENDIF.'
+	.
+	= 'IF' bed 'THEN' codeblock 'ELSE' codeblock 'ENDIF.'
+	.
+> .
+
+whiledo = <
+	= 'WHILE' bed 'DO' codeblock 'ENDWHILE.'
+	.
+> .
+
+
+fordo   = <
+	= 'FOR' bed ';' anw 'DO' codeblock 'ENDFOR.'
+	.
+> .
+
+bed     = <
+	= formel compop formel
+	.
+> .
+
+compop  = <
+	= '>'
+	.
+	= '<'
+	.
+	= '=='
+	.
+> .
+
+zuwe    = <
+	= identifier '=' konkat ';'
+	.
+	= identifier '=' formel ';'
+	.
+> .
+
+konkat  = <
+	= string_const 
+	.
+	= string_const '+' string_const
+	.
+	= string_const '+' identifier
+	.
+> .
+
+formel  = <
 	= term
 	.
-> .
-
-term = <
-	= term '*' factor
+	= formel '+' term
 	.
-	= factor
+	= formel '-' term
 	.
 > .
 
-factor = <
+term    = <
+	= faktor
+	.
+	= term '*' negfak
+	.
+	= term '/' negfak
+	.
+> .
+
+negfak  = <
+	= faktor
+	.
+	= '-' faktor
+	.
+
+faktor  = <
 	= int_const
 	.
 	= float_const
+	.
+	= identifier
+	.
+	= '(' formel ')'
 	.
 > .
 
 /* Tokens */
 int_const:    [Value: long]   {Value := 0;  } .
 float_const:  [Value: double] {Value := 0.0;} .
+string_const: [Value: tIdent] {Value := NoIdent;} .
+identifier:   [Ident: tIdent] {Ident := NoIdent; } .
