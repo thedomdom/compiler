@@ -42,11 +42,14 @@ sprache_x = <
 decl_l  = <
 	= /* epsilon */
 	.
- decl   = <
+	= decl_l decl ';'
+	.
+> . /* decl_l */
+
+decl   = <
 	= inout typ identifier
 	.
- > . /* decl */
-> . /* decl_l */
+> .
 
 inout = <
 	= 'INPUT'
@@ -58,7 +61,7 @@ inout = <
 > .
 
 typ = <
-	= 'STING'
+	= 'STRING'
 	.
 	= 'INT'
 	.
@@ -71,20 +74,23 @@ codeblock = <
 	.
 > .
 
-anw_l   = <
+anw_l  = <
 	= /* epsilon */
 	.
- anw    = <
-	= zuwe
+	= anw_l anw
 	.
-	= ifelse
-	.
-	= whiledo
-	.
-	= fordo
-	.
- > . /* anw */
 > . /* anw_l */
+
+anw    = <
+      = zuwe
+      .
+      = ifelse
+      .
+      = whiledo
+      .
+      = fordo
+      .
+> .
 
 
 ifelse = <
@@ -158,6 +164,7 @@ negfak  = <
 	.
 	= '-' faktor
 	.
+>.
 
 faktor  = <
 	= int_const

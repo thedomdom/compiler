@@ -36,6 +36,7 @@ LOCAL {
 # define MAX_STRING_LEN 2048
 char string[MAX_STRING_LEN];
 int nesting = 0;
+int len = 0;
 }
 
 DEFAULT {
@@ -72,9 +73,12 @@ EOF {
 
 DEFINE /* some abbreviations */
   digit  = {0-9}       .
+  letter = {a-z}|{A-Z} .
+  identLetter = {a-z}|{A-Z}|"$"|"_".
+  string = - {"\\\n\r\f} .
 
 /* define start states, note STD is defined by default */
-START COMMENT, COMMENT2
+START COMMENT, COMMENT2, STRING
 
 RULES
 
@@ -127,4 +131,45 @@ RULES
 
 INSERT RULES #STD#
 
-/**********************************************************************/
+#STD# identLetter (identLetter | digit)*:
+{
+  return identifier;
+}
+
+#STD# \" :
+	{ 
+		yyStart(STRING);
+		len = 0;
+	}
+#STRING# string* :
+	{
+		if(len + expr_scan_TokenLength+1 >= MAX_STRING_LEN){
+			WritePosition(stderr, expr_scan_Attribute.Position);
+			len = 0;
+		}
+		len += expr_scan_GetWord(&string[len]);
+	}
+#STRING# \" :
+	{ 
+		yyStart(STD);
+		string[len] = '\0';
+		expr_scan_Attribute.string_const.Value = malloc(len);
+		strcpy(expr_scan_Attribute.string_const.Value, string);
+		return string_const;
+	}
+#STRING# \\ n :
+	{ 
+		if(len + 1 >= MAX_STRING_LEN){
+			WritePosition(stderr, expr_scan_Attribute.Position);
+			fprintf(stderr, " tl\n");
+		}
+		string[len++] = '\n';
+	}
+#STRING# \\ :
+	{
+		if(len + 1 >= MAX_STRING_LEN){
+			WritePosition(stderr, expr_scan_Attribute.Position);
+			fprintf(stderr, " tl\n");
+		}
+		string[len++] = '\\';
+	}

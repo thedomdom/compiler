@@ -1,11 +1,11 @@
 -- Language X error
 
-PROGRAMM fakultaet
+PROGRAM fakultaet
 DECLARATIONS
   INPUT INT n
   OUTPUT INT f;
   INT m;
-BEGIN
+BEGINN
   f = 1;
   m = 2;
   WHILE m<n+1 DO
