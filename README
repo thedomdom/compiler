@@ -6,7 +6,7 @@
 # $Id: README,v 1.14 2014/11/27 08:45:41 vollmer Exp $
 ###############################################################################
 
-[](https://docs.google.com/document/d/1Dr372Fb_vVPigSlPu5KBJNMsluqyYlIQco8PIc8VEzA/edit)
+[Grammar specification Language X](https://docs.google.com/document/d/1Dr372Fb_vVPigSlPu5KBJNMsluqyYlIQco8PIc8VEzA/edit)
 
 Files:
 	Makefile       create a tar archive, run all tests, etc.
