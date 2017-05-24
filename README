@@ -6,7 +6,10 @@
 # $Id: README,v 1.14 2014/11/27 08:45:41 vollmer Exp $
 ###############################################################################
 
-[Grammar specification Language X](https://docs.google.com/document/d/1Dr372Fb_vVPigSlPu5KBJNMsluqyYlIQco8PIc8VEzA/edit)
+Link to "Sprache X" Grammar:
+https://docs.google.com/document/d/1Dr372Fb_vVPigSlPu5KBJNMsluqyYlIQco8PIc8VEzA/edit
+
+Complete folder: https://drive.google.com/drive/u/0/folders/0B_U6a5RTB5KINTI5WW9XN3hXN1U
 
 Files:
 	Makefile       create a tar archive, run all tests, etc.
