@@ -107,7 +107,7 @@ whiledo = <
 
 
 fordo   = <
-	= 'FOR' bed ';' anw 'DO' codeblock 'ENDFOR.'
+	= 'FOR' bed ';' zuwe 'DO' codeblock 'ENDFOR.'
 	.
 > .
 
@@ -135,8 +135,6 @@ zuwe    = <
 konkat  = <
 	= string_const 
 	.
-	= string_const '+' string_const
-	.
 	= string_const '+' identifier
 	.
 > .
@@ -151,7 +149,7 @@ formel  = <
 > .
 
 term    = <
-	= faktor
+	= negfak
 	.
 	= term '*' negfak
 	.
