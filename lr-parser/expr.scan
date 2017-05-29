@@ -35,7 +35,6 @@ LOCAL {
 /* user-defined local variables of the generated GetToken routine */
 # define MAX_STRING_LEN 2048
 char string[MAX_STRING_LEN];
-int nesting = 0;
 int len = 0;
 }
 
@@ -133,9 +132,7 @@ INSERT RULES #STD#
 	{ 
 		yyStart(STD);
 		string[len] = '\0';
-		expr_scan_Attribute.string_const.Value = malloc(len);
-		strcpy(expr_scan_Attribute.string_const.Value, string);
-		return string_const;
+		return MakeIdent(string, len);
 	}
 #STRING# \\ n :
 	{ 
