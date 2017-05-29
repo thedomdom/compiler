@@ -91,8 +91,6 @@ GLOBAL {
   # include <stdlib.h>
   # include "rString.h"
   
-  /* Variable for checking correct bracket nesting */
-  int bracketCounter = 0;
 } // GLOBAL
 
 LOCAL {
@@ -110,12 +108,6 @@ DEFAULT {
 
 EOF {
   /* What should be done if the end-of-input-file has been reached? */
-  if (bracketCounter > 0) {
-    Message (" Zu viele oeffnende Klammern!", xxError, l_scan_Attribute.Position);
-  }
-  if (bracketCounter < 0) {
-      Message (" Zu viele schliessende Klammern!", xxError, l_scan_Attribute.Position);
-  }
 
   /* E.g.: check hat strings and comments are closed. */
   switch (yyStartState) {
@@ -201,13 +193,11 @@ RULE
 
 #STD# "(" :
 	{
-		bracketCounter = bracketCounter+1;
 		return tok_BRACKETOP;
 	}
 	
 #STD# ")" :
 	{
-		bracketCounter = bracketCounter-1;
 		return tok_BRACKETCL;
 	}
 
