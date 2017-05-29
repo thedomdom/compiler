@@ -126,16 +126,7 @@ compop  = <
 > .
 
 zuwe    = <
-	= identifier '=' konkat ';'
-	.
 	= identifier '=' formel ';'
-	.
-> .
-
-konkat  = <
-	= string_const 
-	.
-	= string_const '+' identifier
 	.
 > .
 
