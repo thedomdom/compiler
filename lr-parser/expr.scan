@@ -58,10 +58,6 @@ EOF {
     Message ("unclosed C-comment",
 	     xxError, expr_scan_Attribute.Position);
     break;
-  case COMMENT2:
-    Message ("unclosed Modula-comment",
-	     xxError, expr_scan_Attribute.Position);
-    break;
   default:
     Message ("OOPS: that should not happen!!",
 	     xxFatal, expr_scan_Attribute.Position);
@@ -78,7 +74,7 @@ DEFINE /* some abbreviations */
   string = - {"\\\n\r\f} .
 
 /* define start states, note STD is defined by default */
-START COMMENT, COMMENT2, STRING
+START COMMENT, STRING
 
 RULES
 
@@ -111,22 +107,6 @@ RULES
 
 #COMMENT# "*/" :
         {yyStart (STD);
-	}
-
-/* Modula2-style nested comment */
-#STD,COMMENT2# "(*" :
-	{ yyStart (COMMENT2);
-	  nesting ++;
-	}
-
-#COMMENT2# - {*(\n\t} + | "*" | "(" :
-        {}
-
-#COMMENT2# "*)" :
-        { nesting --;
-	  if (nesting == 0) {
-	    yyStart (STD);
-	  }
 	}
 
 INSERT RULES #STD#
