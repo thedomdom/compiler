@@ -1,0 +1,17 @@
+-- Language X faculty
+
+PROGRAM fakultaet
+DECLARATIONS
+  INPUT INT n;
+  OUTPUT INT f;
+  INT m;
+BEGIN
+  f = 1;
+  m = 2;
+  WHILE m<n+1 DO
+    BEGIN
+      f=f*m;
+      m=m+1;
+    END.
+  ENDWHILE.
+END.

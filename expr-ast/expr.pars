@@ -1,21 +1,15 @@
 /* Project:  COCKTAIL training
- * Descr:    LR parser for an expression language
- * Kind:     Parser specification (stub)
- * Author:   Dr. Juergen Vollmer <Juergen.Vollmer@informatik-vollmer.de>
- * $Id: expr.pars,v 1.4 2007/06/01 12:04:31 vollmer Exp vollmer $
+ * Descr:    A simple pocket computer (scanner, parser, AST construction)
+ * Kind:     Parser specification
+ * Author:   Prof. Dr. Juergen Vollmer <vollmer@dhbw-karlsruhe.de>
+ * $Id: expr.pars.in,v 1.6 2010/04/26 14:00:29 vollmer Exp $
  */
 
 // Exercises:
-//  - Add other arithmetic (binary - / **, unary + and -) operations.
-//    Think about accosiactivity and operator precedence.
-//  - Add identifiers as part of an expression to your grammer
-//    extend the scanner.
-//  - Add comma separated list of expressions. The list may be empty.
-//   'expr_l' (expression list) should be the new grammar root symbol.
-//  - Rewrite your grammar, so that precedences are used
-//  - Add C-style statements (e.g. assignment, if, while and statement lists)
-//    to your grammar. 'stmt' should be the new root symbol of your grammar
-//  - Add those statements using Modula-style syntax.
+//  - Add computation of the "Tree" Attribute to all grammar rules.
+//  - Add grammar and tree construction rules to construct an AST for
+//    "sin()", "cos()", and "tan()" (see expr.ast)
+//    Add a grammar and evaluation rule for the constant    "pi"
 //  - Add more test sources to test your grammar
 
 SCANNER expr_scan
@@ -151,7 +145,7 @@ term    = <
 negfak  = <
 	= faktor
 	.
-	= '-' faktor 
+	= '-' faktor
 	.
 >.
 

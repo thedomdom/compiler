@@ -1,0 +1,192 @@
+/* Project:  COCKTAIL training
+ * Descr:    Build an Abstract Syntax Tree for an expression language
+ * Kind:     AST specification
+ * Author:   Prof. Dr. Juergen Vollmer <vollmer@dhbw-karlsruhe.de>
+ * $Id: expr.ast.in,v 1.5 2010/04/26 13:59:30 vollmer Exp $
+ */
+MODULE abstract_syntax
+		  /* AST-files may be separated into modules, contained in various files */
+
+TREE   Tree  /* Name of the tree. Code is generated into files:
+	      * `Tree.h', `expr_tree.c', and `yyexpr_tree.h'
+              * In the further description we use the "generic" name `TREE'.
+  	      */
+IMPORT {
+  /* The target-code of this section is copied into the generated .h file
+   * before the declaration of the `typedef .... tTREE'
+   */
+} // IMPORT
+
+EXPORT {
+  /* The target-code of this section is copied into the generated .h file
+   * after the declaration of the `typedef .... tTREE', but before
+   * the declaration of the tree nodes struct's.
+   */
+
+  # include "Position.h"
+  # include "Idents.h"
+
+  /* tIdent's for function names */
+  extern tIdent id_sin, id_cos, id_tan;
+} // EXPORT
+
+GLOBAL {
+  /* The target-code of this section is copied into the generated .c file */
+   tIdent id_sin, id_cos, id_tan;
+} // GLOBAL
+
+BEGIN {
+  /* Target code to be placerd in the BeginTREE() function */
+  id_sin = MakeIdent1 ("sin");
+  id_cos = MakeIdent1 ("cos");
+  id_tan = MakeIdent1 ("tan");
+} // BEGIN
+
+CLOSE {
+  /* Target code to be placerd in the CloseTREE() function */
+} // CLOSE
+
+PROPERTY INPUT  /* all attributes are parameters of the generate the mXX() routines */
+
+RULE  /* Here we define the node types */
+
+/* list of expressions */
+EXPRS = <
+  no_exprs	= /* end of list */
+		.
+  exprs		= Next: EXPRS   REV /* a PROPERTY of a node child
+                                     * REV: "this is the list-next-pointer"
+				     * `ReverseTREE' reverses the list "over" this field
+				     */
+		  Expr: EXPR
+		.
+> .
+
+/* expressions */
+EXPR = [Pos: tPosition] <
+   int_const	= [Value: int]
+		.
+/* TODO: - add tree specification for floating point constants,
+ *         node name "float_const"
+ *       - add unary expressions, node name "unary_expr"
+ */
+   binary_expr	= [Op  : char ]     /* binary expressions */
+		  Left : EXPR
+		  Right: EXPR
+  		.
+/* TODO: add conditional expressions, node name "cond_expr" */
+
+// TODO: Add rules for sin(), cos(), tan()
+//       Note: Generalize: only one AST-node type should be used,
+//             and functions may take list of expressions.
+//             Use the reuse tIdent  data type to represent the function's name.
+> .
+END abstract_syntax
+
+/* REAMDE about this specification.
+ *
+ * Generated typedef's into the TREE.h file
+ *  tTREE        for the entire tree
+ *  tNODE        for all node types, not being subtype of another node type.
+ *               (tNODE is "equal" to tTREE, it may be used to self-document
+ *                plain C-programs using the AST data structures)
+ *  void (* TREE_tProcTree) (tTREE t)
+ *		  a function type taking a node as argument
+ *
+ * For each node type NODE a distinct
+ *    # define kNODE <some integer>
+ * is created in the TREE.h file
+ *
+ * Data structures:
+ * Given the following AST spec (where M is another node type and t a C-type)
+ *    N =  a1: M
+ *        [a2: t] <
+ *      n1 =  a11: M      //  a11 is called a child of node n1 of tree type M
+ *           [a12: t]     //  a12 is called an attribute of x1 of type T
+ *         .
+ *      n2 = ....
+ *         .
+ *    > .
+ *  Nodes of type N, n1, and n2 have all a child a1 and an attribute a2.
+ *  Nodes of type n1 has the additional child a11 and the attribute a12.
+ *
+ *  If x is a variable and points to a node of type N having attributes
+ *  i.e. there is a C variable declaration
+ *        tN x;
+ *  then we can write in C:
+ *  	-  if (x->Kind == kn1)         // Kind contains an integer value
+ *      	 		       // e.g. kn1 (see the #define above)
+ *      -  x->n1.a1                    // a pointer to an M-node
+ *      -  x->n1.a1->Kind              // ... and it's Kind value
+ *      -  x->n1.a2                    // avlue of type T
+ *
+ *  "Dynmic type-check":
+ *    if (TREE_IsType (x, kNODE) ...
+ *      this checks that x refers to a node pf the NODE
+ *
+ * For each node type `N' some routines are generated. The most important are:
+ *        tTREE mN (....)
+ *		node constructor with initialization of the INPUT attributes
+ *		as given by the actual parameters and default initialization
+ *		of the non-INPUT attributes (`beginTYPE(val)').
+ *		Tha arguments are in the order as given in the node
+ *		specification. If N is a sub type of M, the INPUT attributes of
+ *		M are set before the ones of N.
+ *	        e.g. 	tcode_tree mN  (tcode_tree a1,  t a2);
+ *			tcalc_tree mn1 (tcode_tree a1,  t a2,
+ *                                      tcode_tree a11, t a12,
+ *        tTREE nN (void)
+ *		node constructor with default initialization (`beginTYPE(val)')
+ *		of the attributes.
+ *		e.g.   tcalc_tree nN  (void);
+ *		       tcalc_tree nn1 (void);
+ *
+ * For the entire tree (these procedures are generated only if triggered by
+ * some command line switches given to 'ast'):
+ *	  void  DrawTREE (tTREE t)
+ *			graphical browser
+ *	  rbool CheckTREE (tTREE t)
+ *			returns true, if all children of all nodes of
+ *			t have the "right" AST-type.
+ *			e.g. returns rfalse if  `Arg' of `unary_expr' refers
+ *			     to an `EXPRS' node instead of an `EXPR'.
+ *        void  WriteTREE (FILE *f, tTREE t)
+ *			write ASCII representation of `t' to `f'
+ *        tTREE ReadTREE (FILE *f)
+ *			read ASCII representation from `f' and build the tree
+ *        void  PutTREE (FILE *f, tTREE t)
+ *			write a binary representation of `t' to `f'
+ *        tTREE GetTREE (FILE *f)
+ *			read a binary representation from `f' and build the
+ +			tree
+ *        void  ReleaseTREE (tTREE t)
+ *			release the allocated memory of `t'
+ *        void  ReleaseTREEModule (void)
+ *			release all allocated memory allocated for trees
+ *			of type tTREE
+ *	  tTREE ReverseTREE (tTREE t)
+ *			if t is node og type NODE, and NODE has a child
+ *			with the REV (REVERSE) property, t represents a list
+ *			and the list is reversed over this
+ *			"next-list-element-pointer"
+ *	  void  ForallTREE (tTREE t, TREE_tProcTree f)
+ *			similar to ReverseTREE: calls for all list elements
+ *			the function `f'.
+ *        rbool TREE_IsType (tTREE t, kNODE)
+ *	                returns rtrue if t is node of type NODE.
+ *			e.g. code_tree_IsType (x, kEXPR) returns true,
+ *			     if x is an EXPR, ..._expr, .._const, or ident
+ *			     node; otherwise false (for eg. an `exprs' node)
+ *        void  TraverseTREETD (tTREE t, TREE_tProcTree f)
+ *        void  TraverseTREEBU (tTREE t, TREE_tProcTree f)
+ *			top-down / bottom-up traversal of the t. For each node
+ *                      n of t `f(n)' is called once. (Only tree valued
+ *			attributes not enclosed in `[' and `]' are considered.
+ *	  tTREE CopyTREE (tTREE t)
+ *			copies `t'.
+ *        const char * const TREE_NodeName [];
+ *			an string-array indexed with the kNODE-integers
+ *			storing the textual representation of the name of NODE
+ *			i.e. the word `NODE'.
+ *        tTREE TREERoot a global variable is declared.
+ */
