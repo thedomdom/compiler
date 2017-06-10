@@ -50,143 +50,82 @@ PROPERTY INPUT  /* all attributes are parameters of the generate the mXX() routi
 
 RULE  /* Here we define the node types */
 
-/* list of expressions */
-EXPRS = <
-  no_exprs	= /* end of list */
+program = [Pos: tPosition]
+          Declaration: DECL_L
+          Body: ANW_L
+          .
+          
+DECLS = <
+  no_decls	= /* end of list */
 		.
-  exprs		= Next: EXPRS   REV /* a PROPERTY of a node child
-                                     * REV: "this is the list-next-pointer"
-				     * `ReverseTREE' reverses the list "over" this field
-				     */
-		  Expr: EXPR
+  decls		= Next: DECLS
+		  Decl: decl
 		.
 > .
 
-/* expressions */
-EXPR = [Pos: tPosition] <
-   int_const	= [Value: int]
-		.
-/* TODO: - add tree specification for floating point constants,
- *         node name "float_const"
- *       - add unary expressions, node name "unary_expr"
- */
-   binary_expr	= [Op  : char ]     /* binary expressions */
-		  Left : EXPR
-		  Right: EXPR
-  		.
-/* TODO: add conditional expressions, node name "cond_expr" */
+decl	  = Name: tIdent
+	    [Inout: char]
+	    [Type: char*]
+	  .
 
-// TODO: Add rules for sin(), cos(), tan()
-//       Note: Generalize: only one AST-node type should be used,
-//             and functions may take list of expressions.
-//             Use the reuse tIdent  data type to represent the function's name.
+ANWS = <
+  no_anws	= /* end of list */
+		.
+  anws		= Next: ANWS
+		  Anw: ANW
+		.
 > .
+	  
+ANW = <
+  assignment = Var_name: tIdent
+	       Value: FORMEL
+	       .
+  ifelse =     Condition: bed
+	       Body: ANW_L
+	       Else: ANW_L
+	       .
+  Whiledo =    Condition: bed
+	       Body: ANW_L
+	       .
+  fordo =      Condition: bed
+	       Increment: assignment
+	       Body: ANW_L
+	       .
+>.
+
+
+
+FAKTOR = <
+  int_const	= [Value: int].
+  float_const   = [Value: double].
+  identifier    = [Ident: tIdent].
+  string_const  = [Value: tIdent].
+  
+  FORMEL = <
+    TERM = <
+      negfak = 	     Factor: FAKTOR
+		     [Op: char]
+		      .
+      multiplikation = Value1: TERM
+		      Value2: negfak
+		      .
+      division       = Value1: TERM
+		      Value2: negfak
+		      .
+    >.
+    summe = Value1: FORMEL
+	    Value2: TERM
+	    .
+    differenz = Value1: FORMEL
+		Value2: TERM
+		.
+  >.
+>.
+
+bed = 
+  Value1: FORMEL
+  Value2: FORMEL
+  [CompOp: char]
+.
+
 END abstract_syntax
-
-/* REAMDE about this specification.
- *
- * Generated typedef's into the TREE.h file
- *  tTREE        for the entire tree
- *  tNODE        for all node types, not being subtype of another node type.
- *               (tNODE is "equal" to tTREE, it may be used to self-document
- *                plain C-programs using the AST data structures)
- *  void (* TREE_tProcTree) (tTREE t)
- *		  a function type taking a node as argument
- *
- * For each node type NODE a distinct
- *    # define kNODE <some integer>
- * is created in the TREE.h file
- *
- * Data structures:
- * Given the following AST spec (where M is another node type and t a C-type)
- *    N =  a1: M
- *        [a2: t] <
- *      n1 =  a11: M      //  a11 is called a child of node n1 of tree type M
- *           [a12: t]     //  a12 is called an attribute of x1 of type T
- *         .
- *      n2 = ....
- *         .
- *    > .
- *  Nodes of type N, n1, and n2 have all a child a1 and an attribute a2.
- *  Nodes of type n1 has the additional child a11 and the attribute a12.
- *
- *  If x is a variable and points to a node of type N having attributes
- *  i.e. there is a C variable declaration
- *        tN x;
- *  then we can write in C:
- *  	-  if (x->Kind == kn1)         // Kind contains an integer value
- *      	 		       // e.g. kn1 (see the #define above)
- *      -  x->n1.a1                    // a pointer to an M-node
- *      -  x->n1.a1->Kind              // ... and it's Kind value
- *      -  x->n1.a2                    // avlue of type T
- *
- *  "Dynmic type-check":
- *    if (TREE_IsType (x, kNODE) ...
- *      this checks that x refers to a node pf the NODE
- *
- * For each node type `N' some routines are generated. The most important are:
- *        tTREE mN (....)
- *		node constructor with initialization of the INPUT attributes
- *		as given by the actual parameters and default initialization
- *		of the non-INPUT attributes (`beginTYPE(val)').
- *		Tha arguments are in the order as given in the node
- *		specification. If N is a sub type of M, the INPUT attributes of
- *		M are set before the ones of N.
- *	        e.g. 	tcode_tree mN  (tcode_tree a1,  t a2);
- *			tcalc_tree mn1 (tcode_tree a1,  t a2,
- *                                      tcode_tree a11, t a12,
- *        tTREE nN (void)
- *		node constructor with default initialization (`beginTYPE(val)')
- *		of the attributes.
- *		e.g.   tcalc_tree nN  (void);
- *		       tcalc_tree nn1 (void);
- *
- * For the entire tree (these procedures are generated only if triggered by
- * some command line switches given to 'ast'):
- *	  void  DrawTREE (tTREE t)
- *			graphical browser
- *	  rbool CheckTREE (tTREE t)
- *			returns true, if all children of all nodes of
- *			t have the "right" AST-type.
- *			e.g. returns rfalse if  `Arg' of `unary_expr' refers
- *			     to an `EXPRS' node instead of an `EXPR'.
- *        void  WriteTREE (FILE *f, tTREE t)
- *			write ASCII representation of `t' to `f'
- *        tTREE ReadTREE (FILE *f)
- *			read ASCII representation from `f' and build the tree
- *        void  PutTREE (FILE *f, tTREE t)
- *			write a binary representation of `t' to `f'
- *        tTREE GetTREE (FILE *f)
- *			read a binary representation from `f' and build the
- +			tree
- *        void  ReleaseTREE (tTREE t)
- *			release the allocated memory of `t'
- *        void  ReleaseTREEModule (void)
- *			release all allocated memory allocated for trees
- *			of type tTREE
- *	  tTREE ReverseTREE (tTREE t)
- *			if t is node og type NODE, and NODE has a child
- *			with the REV (REVERSE) property, t represents a list
- *			and the list is reversed over this
- *			"next-list-element-pointer"
- *	  void  ForallTREE (tTREE t, TREE_tProcTree f)
- *			similar to ReverseTREE: calls for all list elements
- *			the function `f'.
- *        rbool TREE_IsType (tTREE t, kNODE)
- *	                returns rtrue if t is node of type NODE.
- *			e.g. code_tree_IsType (x, kEXPR) returns true,
- *			     if x is an EXPR, ..._expr, .._const, or ident
- *			     node; otherwise false (for eg. an `exprs' node)
- *        void  TraverseTREETD (tTREE t, TREE_tProcTree f)
- *        void  TraverseTREEBU (tTREE t, TREE_tProcTree f)
- *			top-down / bottom-up traversal of the t. For each node
- *                      n of t `f(n)' is called once. (Only tree valued
- *			attributes not enclosed in `[' and `]' are considered.
- *	  tTREE CopyTREE (tTREE t)
- *			copies `t'.
- *        const char * const TREE_NodeName [];
- *			an string-array indexed with the kNODE-integers
- *			storing the textual representation of the name of NODE
- *			i.e. the word `NODE'.
- *        tTREE TREERoot a global variable is declared.
- */

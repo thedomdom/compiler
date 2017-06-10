@@ -18,6 +18,7 @@ PARSER  expr_pars
 
 GLOBAL {
  # include <stdio.h>
+ # include "Tree.h"
 }
 
 PREC LEFT '<' '>' '=='
@@ -26,56 +27,77 @@ PREC LEFT '<' '>' '=='
 
 RULE
 
-root = sprache_x.
+root 	= sprache_x
+	  {=> {TreeRoot = sprache_x:tree;};}
+	.
 
 sprache_x = <
-	= 'PROGRAM' identifier 'DECLARATIONS' decl_l codeblock
+	= 'PROGRAM' i:identifier 'DECLARATIONS' d:decl_l c:codeblock
+	   {tree:=mprogram(i:Ident, d:tree, c:tree);}
 	.
 > .
 
-decl_l  = <
+
+decl_l	= <
 	= /* epsilon */
+	  {tree := mno_decls();}
 	.
-	= decl_l decl ';'
+ decls  = <
+	= d:decl
+	  {tree := mdecls (mno_decls(), d:tree);}
 	.
+	= l:decls ',' d:decl
+	  // left recursive list
+	  {tree := mdecls (l:tree, d:tree);}
+	.
+ > . /* decls */
 > . /* decl_l */
 
 decl   = <
-	= inout typ identifier
+	= io:inout t:typ i:identifier
+	{tree: mdecl(io, t, i:Ident);}
 	.
 > .
 
 inout = <
-	= 'INPUT'
-	.
-	= 'OUTPUT'
+	= 'INPUT' {String erstellen}
+	. 
+	= 'OUTPUT' {String erstellen}
 	.
 	= /* epsilon */
 	.
 > .
 
 typ = <
-	= 'STRING'
+	= 'STRING' {String erstellen}
 	.
-	= 'INT'
+	= 'INT' {String erstellen}
 	.
-	= 'FLOAT'
+	= 'FLOAT' {String erstellen}
 	.
 > .
 
 codeblock = <
-	= 'BEGIN' anw_l 'END.'
+	= 'BEGIN' anw_l 'END.' //Copy-Regel
 	.
 > .
 
-anw_l  = <
+anw_l	= <
 	= /* epsilon */
+	  {tree := mno_anws();}
 	.
-	= anw_l anw
+ anws  = <
+	= a:anw
+	  {tree := manws (mno_anws(), a:tree);}
 	.
+	= l:anws ',' a:anw
+	  // left recursive list
+	  {tree := manws (l:tree, a:tree);}
+	.
+ > . /* anws */
 > . /* anw_l */
 
-anw    = <
+anw    = < //Copy-Regel?
       = zuwe
       .
       = ifelse
@@ -88,82 +110,122 @@ anw    = <
 
 
 ifelse = <
-	= 'IF' bed 'THEN' codeblock 'ENDIF.'
+	= 'IF' b:bed 'THEN' t:codeblock 'ENDIF.'
+	{tree:=mifelse(b:tree, t:tree, mno_anws());}
 	.
-	= 'IF' bed 'THEN' codeblock 'ELSE' codeblock 'ENDIF.'
+	= 'IF' b:bed 'THEN' t:codeblock 'ELSE' e:codeblock 'ENDIF.'
+	{tree:=mifelse(b:tree, t:tree, e:tree);}
 	.
 > .
 
 whiledo = <
-	= 'WHILE' bed 'DO' codeblock 'ENDWHILE.'
+	= 'WHILE' b:bed 'DO' c:codeblock 'ENDWHILE.'
+	{tree:=mwhiledo(b:tree, c:tree);}
 	.
 > .
 
 
 fordo   = <
-	= 'FOR' bed ';' zuwe 'DO' codeblock 'ENDFOR.'
+	= 'FOR' b:bed ';' z:zuwe 'DO' c:codeblock 'ENDFOR.'
+	{tree:=mfordo(b:tree, z:tree, c:tree);}
 	.
 > .
 
 bed     = <
-	= formel compop formel
+	= l:formel c:compop r:formel
+	{tree:=mbed(l:tree, r:tree, c:Value);}
 	.
 > .
 
 compop  = <
-	= '>'
+	= '>' {String erstellen}
 	.
-	= '<'
+	= '<' {String erstellen}
 	.
-	= '=='
+	= '==' {String erstellen}
 	.
 > .
 
 zuwe    = <
-	= identifier '=' formel ';'
+	= i:identifier '=' f:formel ';'
+	{tree:=massignment(i, f:tree);}
 	.
 > .
 
 formel  = <
-	= term
+	= term //Copy-Regel?
 	.
-	= formel '+' term
+	= l:formel '+' r:term
+	{tree:=msumme(l:tree, r:tree);}
 	.
-	= formel '-' term
+	= l:formel '-' r:term
+	{tree:=mdifferenz(l:tree, r:tree);}
 	.
 > .
 
 term    = <
-	= negfak
+	= negfak //Copy
 	.
-	= term '*' negfak
+	= l:term '*' r:negfak
+	{tree:=mmultiplikation(l:tree, r:tree);}
 	.
-	= term '/' negfak
+	= l:term '/' r:negfak
+	{tree:=mdivision(l:tree, r:tree);}
 	.
 > .
 
 negfak  = <
-	= faktor
+	= f:faktor //Copy-Regel?
+	{tree:=mnegfak(f:tree, '+');}
 	.
-	= '-' faktor
+	= '-' f:faktor
+	{tree:=mnegfak(f:tree, '-');}
 	.
 >.
 
 faktor  = <
-	= int_const
+	= c:int_const
+	{tree := mint_const (c:Position, c:Value);}
 	.
-	= float_const
+	= c:float_const
+	{tree := mfloat_const (c:Position, c:Value);}
 	.
-	= string_const
+	= c:string_const
+	{tree := mstring_const (c:Position, c);}
 	.
-	= identifier
+	= i:identifier
+	{tree := mstring_const (i:Position, i);}
 	.
-	= '(' formel ')'
+	= '(' formel ')' //Copy-Regel
 	.
 > .
 
 /* Tokens */
 int_const:    [Value: long]   {Value := 0;  } .
 float_const:  [Value: double] {Value := 0.0;} .
-string_const: [Value: tIdent] {Value := NoIdent;} .
+string_const: [Value: tIdent] {Value := NoIdent;} . //Datentyp?
 identifier:   [Ident: tIdent] {Ident := NoIdent; } .
+
+/* non-terminal attributes */
+MODULE attributes
+PROPERTY SYN
+DECLARE
+ sprache_x
+ decl_l
+ decls
+ decl
+ codeblock
+ anw_l
+ anws
+ anw 
+ ifelse
+ whiledo 
+ fordo
+ bed
+ compop
+ zuwe
+ formel
+ term
+ negfak
+ faktor= [tree: tTree].
+END attributes
