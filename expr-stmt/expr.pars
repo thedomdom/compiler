@@ -1,0 +1,185 @@
+/* Project:  COCKTAIL training
+ * Descr:    A simple pocket computer (scanner, parser, AST construction)
+ * Kind:     Parser specification (solution)
+ * Author:   Prof. Dr. Juergen Vollmer <vollmer@dhbw-karlsruhe.de>
+ * $Id: expr.pars.in,v 1.11 2010/04/26 16:24:21 vollmer Exp $
+ */
+
+SCANNER expr_scan
+
+PARSER  expr_pars
+
+/* Exercises:
+ *  - Extend the language, so that
+ *	- statements
+ * 	  - if-then-else
+ *	  - while
+ *	  - assignment
+ *       - expressions
+ *	  - variables
+ *    are accepted
+ *  - Add the tree constructions for that.
+ */
+
+GLOBAL {
+ # include <stdio.h>
+ # include "Tree.h"
+
+  static tTree set_stmt_end (tTree head)
+  /* Set the Next field of 'head' (a STMT-node) to no_stmt() */
+  {
+     head->STMT.Next = mno_stmt();
+     return head;
+  }
+
+  static tTree set_stmt_next (tTree head, tTree tail)
+  /* Set the Next field of 'head' (a STMT-node) to 'tail' (a STMTS-node) */
+  {
+     head->STMT.Next = tail;
+     return head;
+  }
+}
+
+PREC LEFT  '?'
+     LEFT  '|'
+     LEFT  '&'
+     LEFT  '!'
+     NONE  '<' '>' '='
+     LEFT  '+' '-'
+     LEFT  '*' '/'
+     RIGHT '^'
+     LEFT UNARY
+
+RULE
+root	= l:stmt_l
+	  {=> {TreeRoot = ReverseTree (l:tree);};}
+	.
+stmt_l  = <
+	// A PASCAL like language with statement separators
+	= s:stmt
+	  {tree := set_stmt_end (s:tree);}
+	.
+	= l:stmt_l ';' s:stmt
+	  {tree := set_stmt_next (s:tree, l:tree);}
+	.
+> . // stmt_l
+stmt = <
+	= i:identifier ':=' e:expr
+	  {tree := massign_stmt (NoTree, ':=':Position, mname (i:Position, i:Ident), e:tree);}
+	.
+	= IF c:expr THEN t:stmt_l e:elseif_l \END
+	  {tree := mif_stmt (NoTree, IF:Position, c:tree, ReverseTree (t:tree), e:tree);}
+	.
+	= WHILE c:expr DO b:stmt_l \END
+	  {tree := mwhile_stmt (NoTree, WHILE:Position, c:tree, ReverseTree (b:tree));}
+	.
+	= PRINT '(' l:expr_l ')'
+	  // print the values of the list to stdout
+	  {tree := mprint_stmt (NoTree, PRINT:Position, ReverseTree (l:tree));}
+	.
+> . // stmt
+
+elseif_l = <
+	= // epsilon
+	  {tree := mno_stmt();}
+	.
+	= ELSE l:stmt_l
+	  {tree := ReverseTree (l:tree);}
+	.
+	= ELSEIF c:expr THEN t:stmt_l e:elseif_l
+	  {tree := mif_stmt (mno_stmt(), ELSEIF:Position, c:tree, ReverseTree (t:tree), e:tree);}
+	.
+> . // elseif_l
+
+expr = <
+	= c:int_const
+	  {tree := mint_const (c:Position, c:Value);}
+	.
+	= c:float_const
+	  {tree := mfloat_const (c:Position, c:Value);}
+	.
+	= pi
+	  {tree := mfloat_const (pi:Position, 3.14159265);}
+	.
+	= i:identifier
+	  {tree := mname (i:Position, i:Ident);}
+	.
+	= '(' expr ')'
+	.
+	= l:expr o:'+' r:expr
+	  {tree := mbinary_expr (o:Position, '+', l:tree, r:tree);}
+	.
+
+	= l:expr o:'-' r:expr
+	  {tree := mbinary_expr (o:Position, '-', l:tree, r:tree);}
+	.
+	= l:expr o:'*'r:expr
+	  {tree := mbinary_expr (o:Position, '*', l:tree, r:tree);}
+	.
+	= l:expr o:'/' r:expr
+	  {tree := mbinary_expr (o:Position, '/', l:tree, r:tree);}
+	.
+	= l:expr o:'^' r:expr
+	  {tree := mbinary_expr (o:Position, '^',  l:tree, r:tree);}
+	.
+	= c:expr o:'?' t:expr ':' e:expr
+	  {tree := mcond_expr (o:Position, c:tree, t:tree, e:tree);}
+	.
+	= o:'+' expr   PREC UNARY
+	  {tree := munary_expr (o:Position, '+', expr:tree);}
+	.
+	= o:'-' expr   PREC UNARY
+	  {tree := munary_expr (o:Position, '-', expr:tree);}
+	.
+	= l:expr o:'>' r:expr
+	  {tree := mbinary_expr (o:Position, '>', l:tree, r:tree);}
+	.
+	= l:expr o:'<' r:expr
+	  {tree := mbinary_expr (o:Position, '<', l:tree, r:tree);}
+	.
+	= l:expr o:'=' r:expr
+	  {tree := mbinary_expr (o:Position, '=', l:tree, r:tree);}
+	.
+	= l:expr o:'&' r:expr
+	  {tree := mbinary_expr (o:Position, '&', l:tree, r:tree);}
+	.
+	= l:expr o:'|' r:expr
+	  {tree := mbinary_expr (o:Position, '|', l:tree, r:tree);}
+	.
+	= o:'!' expr  PREC UNARY
+	  {tree := munary_expr (o:Position, '!', expr:tree);}
+	.
+	= i:identifier '(' e:expr_l ')'  // function call
+	  {tree := mcall_expr (i:Position, i:Ident, ReverseTree (e:tree)); }
+	.
+> . /* expr */
+
+expr_l	= <
+	= /* epsilon */
+	  {tree := mno_exprs();}
+	.
+ exprs  = <
+	= e:expr
+	  {tree := mexprs (mno_exprs(), e:tree);}
+	.
+	= l:exprs ',' e:expr
+	  {tree := mexprs (l:tree, e:tree);}
+	.
+ > . /* exprs */
+> . /* expr_l */
+
+/* Tokens */
+int_const:    [Value: long]   {Value := 0;  	} .
+float_const:  [Value: double] {Value := 0.0;	} .
+identifier:   [Ident: tIdent] {Ident := NoIdent;} .
+
+/* non-terminal attributes */
+MODULE attributes
+PROPERTY SYN
+DECLARE
+ stmt
+ stmt_l
+ elseif_l
+ expr
+ expr_l = [tree: tTree].
+END attributes

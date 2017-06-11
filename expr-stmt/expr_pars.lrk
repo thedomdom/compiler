@@ -1,0 +1,229 @@
+SCANNER expr_scan PARSER expr_pars
+IMPORT {
+}
+
+EXPORT {
+}
+
+GLOBAL {
+
+#@ line 24 "expr.pars"
+
+ # include <stdio.h>
+ # include "Tree.h"
+
+  static tTree set_stmt_end (tTree head)
+  /* Set the Next field of 'head' (a STMT-node) to no_stmt() */
+  {
+     head->STMT.Next = mno_stmt();
+     return head;
+  }
+
+  static tTree set_stmt_next (tTree head, tTree tail)
+  /* Set the Next field of 'head' (a STMT-node) to 'tail' (a STMTS-node) */
+  {
+     head->STMT.Next = tail;
+     return head;
+  }
+
+
+#@ line 31 "expr_pars.lrk"
+# ifdef CommonParsAttrs
+typedef struct { CommonParsAttrs } yytCommonParsAttrs;
+#  define yyCommon yytCommonParsAttrs Common;
+#  define yyCommonParsAttrs CommonParsAttrs
+# else
+#  define yyCommon
+#  define yyCommonParsAttrs
+# endif
+
+typedef struct { yyCommonParsAttrs tTree tree; } zz_stmt_l;
+typedef struct { yyCommonParsAttrs tTree tree; } zz_stmt;
+typedef struct { yyCommonParsAttrs tTree tree; } zz_elseif_l;
+typedef struct { yyCommonParsAttrs tTree tree; } zz_expr;
+typedef struct { yyCommonParsAttrs tTree tree; } zz_expr_l;
+
+typedef union {
+expr_scan_tScanAttribute Scan;
+yyCommon
+zz_stmt_l stmt_l;
+zz_stmt stmt;
+zz_elseif_l elseif_l;
+zz_expr expr;
+zz_expr_l expr_l;
+} tParsAttribute;
+}
+
+LOCAL {
+}
+
+BEGIN {
+}
+
+CLOSE {
+}
+
+TOKEN
+
+int_const = 1
+float_const = 2
+identifier = 3
+':=' = 4
+pi = 5
+'(' = 6
+')' = 7
+'+' = 8
+'-' = 9
+'*' = 10
+'/' = 11
+'^' = 12
+'?' = 13
+':' = 14
+'>' = 15
+'<' = 16
+'=' = 17
+'&' = 18
+'|' = 19
+'!' = 20
+',' = 21
+IF = 22
+THEN = 23
+ELSE = 24
+ELSEIF = 25
+END = 26
+WHILE = 27
+DO = 28
+PRINT = 29
+';' = 30
+
+OPER
+
+LEFT  '?'
+LEFT  '|'
+LEFT  '&'
+LEFT  '!'
+NONE  '<' '>' '='
+LEFT  '+' '-'
+LEFT  '*' '/'
+RIGHT '^'
+LEFT  UNARY
+
+RULE
+
+root : stmt_l {
+#@ line 55 "expr.pars"
+{  TreeRoot = ReverseTree ($1.stmt_l.tree);; }} .
+
+#@ line 59 "expr.pars"
+stmt_l : stmt {
+$$.stmt_l.tree = set_stmt_end ($1.stmt.tree);} .
+
+stmt_l : stmt_l ';' stmt {
+$$.stmt_l.tree = set_stmt_next ($3.stmt.tree, $1.stmt_l.tree);} .
+
+#@ line 67 "expr.pars"
+stmt : identifier ':=' expr {
+$$.stmt.tree = massign_stmt (NoTree, $2.Scan.Position, mname ($1.Scan.Position, $1.Scan.identifier.Ident), $3.expr.tree);} .
+
+stmt : IF expr THEN stmt_l elseif_l END {
+$$.stmt.tree = mif_stmt (NoTree, $1.Scan.Position, $2.expr.tree, ReverseTree ($4.stmt_l.tree), $5.elseif_l.tree);} .
+
+stmt : WHILE expr DO stmt_l END {
+$$.stmt.tree = mwhile_stmt (NoTree, $1.Scan.Position, $2.expr.tree, ReverseTree ($4.stmt_l.tree));} .
+
+stmt : PRINT '(' expr_l ')' {
+#@ line 78 "expr.pars"
+$$.stmt.tree = mprint_stmt (NoTree, $1.Scan.Position, ReverseTree ($3.expr_l.tree));} .
+
+#@ line 83 "expr.pars"
+elseif_l : {
+$$.elseif_l.tree = mno_stmt();} .
+
+elseif_l : ELSE stmt_l {
+$$.elseif_l.tree = ReverseTree ($2.stmt_l.tree);} .
+
+elseif_l : ELSEIF expr THEN stmt_l elseif_l {
+$$.elseif_l.tree = mif_stmt (mno_stmt(), $1.Scan.Position, $2.expr.tree, ReverseTree ($4.stmt_l.tree), $5.elseif_l.tree);} .
+
+#@ line 95 "expr.pars"
+expr : int_const {
+$$.expr.tree = mint_const ($1.Scan.Position, $1.Scan.int_const.Value);} .
+
+expr : float_const {
+$$.expr.tree = mfloat_const ($1.Scan.Position, $1.Scan.float_const.Value);} .
+
+expr : pi {
+$$.expr.tree = mfloat_const ($1.Scan.Position, 3.14159265);} .
+
+expr : identifier {
+$$.expr.tree = mname ($1.Scan.Position, $1.Scan.identifier.Ident);} .
+
+expr : '(' expr ')' {
+#@ line 163 "expr_pars.lrk"
+$$.expr.tree = $2.expr.tree;
+} .
+
+#@ line 109 "expr.pars"
+expr : expr '+' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '+', $1.expr.tree, $3.expr.tree);} .
+
+#@ line 113 "expr.pars"
+expr : expr '-' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '-', $1.expr.tree, $3.expr.tree);} .
+
+expr : expr '*' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '*', $1.expr.tree, $3.expr.tree);} .
+
+expr : expr '/' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '/', $1.expr.tree, $3.expr.tree);} .
+
+expr : expr '^' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '^',  $1.expr.tree, $3.expr.tree);} .
+
+expr : expr '?' expr ':' expr {
+$$.expr.tree = mcond_expr ($2.Scan.Position, $1.expr.tree, $3.expr.tree, $5.expr.tree);} .
+
+expr : '+' expr PREC UNARY {
+$$.expr.tree = munary_expr ($1.Scan.Position, '+', $2.expr.tree);} .
+
+expr : '-' expr PREC UNARY {
+$$.expr.tree = munary_expr ($1.Scan.Position, '-', $2.expr.tree);} .
+
+expr : expr '>' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '>', $1.expr.tree, $3.expr.tree);} .
+
+expr : expr '<' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '<', $1.expr.tree, $3.expr.tree);} .
+
+expr : expr '=' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '=', $1.expr.tree, $3.expr.tree);} .
+
+expr : expr '&' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '&', $1.expr.tree, $3.expr.tree);} .
+
+expr : expr '|' expr {
+$$.expr.tree = mbinary_expr ($2.Scan.Position, '|', $1.expr.tree, $3.expr.tree);} .
+
+expr : '!' expr PREC UNARY {
+$$.expr.tree = munary_expr ($1.Scan.Position, '!', $2.expr.tree);} .
+
+expr : identifier '(' expr_l ')' {
+$$.expr.tree = mcall_expr ($1.Scan.Position, $1.Scan.identifier.Ident, ReverseTree ($3.expr_l.tree)); } .
+
+#@ line 158 "expr.pars"
+expr_l : {
+$$.expr_l.tree = mno_exprs();} .
+
+
+expr_l : expr {
+$$.expr_l.tree = mexprs (mno_exprs(), $1.expr.tree);} .
+
+expr_l : exprs ',' expr {
+$$.expr_l.tree = mexprs ($1.expr_l.tree, $3.expr.tree);} .
+
+#@ line 162 "expr.pars"
+exprs : expr {
+$$.expr_l.tree = mexprs (mno_exprs(), $1.expr.tree);} .
+
+exprs : exprs ',' expr {
+$$.expr_l.tree = mexprs ($1.expr_l.tree, $3.expr.tree);} .

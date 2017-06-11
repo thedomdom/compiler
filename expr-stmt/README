@@ -1,0 +1,48 @@
+###############################################################################
+# Project:  COCKTAIL training
+# Descr:    LR parser for an expression language
+# Kind:     README
+# Author:   Dr. Juergen Vollmer <Juergen.Vollmer@informatik-vollmer.de>
+# $Id: README,v 1.9 2010/04/26 16:30:56 vollmer Exp $
+###############################################################################
+
+This directory describes the implementation of an LR parser for
+arithmetic expressions. The Abstract Syntax Tree is constructed and traversed.
+The AST is constructed using the Cocktail tool ast
+
+Extend the expression language with statememnts, like assignment, loops etc.
+
+The files:
+	expr.pars	The parser specification (stub)
+			The scanner specification is taken from ../calc
+	expr.ast        The AST specification
+	expr.puma       A PUMA routine evaluating the tree
+	main.c          C-main program
+	test*           Some test sources
+	calc		the executable to be produced
+	Makefile
+	README
+
+	expr-solution.pars
+	expr-solution.ast
+	expr-solution.puma
+
+Exercises:
+  - Extend the language, so that
+	- statements
+ 	  - if-then-else
+	  - while
+	  - assignment
+        - expressions
+	  - variables
+    are accepted
+  - Extend the AST specification in expr.ast to represent the language
+    constructs defined in expr.pars
+  - Extend the evaluator contained in expr.puma
+    so that those program constructs are evaluated
+    (--> interpreted)
+    Use the global array  (declared in the GLOBAL section
+    of the puma specifiction)
+        # define MAX_IDENTS 100
+	static double [MAX_IDENTS] values;
+    to store the values of variables.

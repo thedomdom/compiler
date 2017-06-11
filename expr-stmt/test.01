@@ -1,0 +1,21 @@
+-- test for a simple pocket calculator
+
+summe := 0;
+prod  := 1;
+n     := 10;
+
+WHILE n > 0
+DO
+  summe := summe + n;
+  prod  := prod  * n;
+  n     := n - 1
+END;
+
+PRINT (summe, prod);
+
+IF     summe = prod
+THEN   PRINT (0)
+ELSEIF summe < prod
+THEN   PRINT (-1)
+ELSE   PRINT (+1)
+END

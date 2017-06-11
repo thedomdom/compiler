@@ -1,0 +1,22 @@
+util.o: ../util.c ../util.h \
+  
+main.o: main.c  \
+   expr_scan.h \
+   expr_pars.h Tree.h \
+   ../util.h expr.h
+expr_scan.o: expr_scan.c expr_scan.h \
+   expr_scanSource.h \
+  
+expr_scanSource.o: expr_scanSource.c expr_scanSource.h \
+  
+expr_pars.o: expr_pars.c expr_pars.h \
+   expr_scan.h \
+   Tree.h \
+   ../util.h
+Tree.o: Tree.c Tree.h  \
+   ../util.h \
+   yyTree.h
+expr.o: expr.c expr.h  \
+   Tree.h \
+   ../util.h \
+   yyexpr.h

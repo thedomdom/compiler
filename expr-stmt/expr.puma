@@ -1,0 +1,181 @@
+/* Project:  COCKTAIL training
+ * Descr:    Build an Abstract Syntax Tree for an expression language
+ * Kind:     Evaluate an AST (PUMA)
+ * Author:   Prof. Dr. Juergen Vollmer <vollmer@dhbw-karlsruhe.de>
+ * $Id: expr.puma.in,v 1.15 2010/04/26 16:30:33 vollmer Exp $
+ */
+
+TRAFO  expr
+
+/* Exercises
+ * - Implement the interpreter, so that the new language constructs are
+ *   interpreted correctly.
+ */
+
+TREE   Tree
+
+IMPORT {
+ # include "Position.h"
+ # include "Idents.h"
+}
+
+GLOBAL {
+ # include <stdlib.h>
+ # include <math.h>
+
+ # define FATAL_ERROR() 								      \
+  {fprintf (stderr, "***** FATAL ERROR *****: file %s, line %d\n", __FILE__ , __LINE__); abort(); }
+/* Indicate a programming error
+ * __FILE__  the filename of the source file "calling" the macro
+ * __LINE__  the line "calling" this macro
+ */
+
+
+ /* The values of variables are stored in the global array 'storage',
+  * which is indexed by the tIdent values representing the variable name.
+  * The array elements are automatically initialized to 0.
+  * TODO: check that no more than MAX_VARIABLES are used in your program source.
+  *       ==> MaxIdents variable in the Idents-module (Idents.h)
+  */
+ # define MAX_VARIABLES 100
+ static double storage[MAX_VARIABLES];
+
+ static double evalBinary (char op, double left, double right, tPosition pos)
+ /* compute "left op right"
+  * "pos" is the source position of the expression
+  *       in case an error message must be emitted.
+  * Note: boolean values are represented as double values:
+  *          FALSE   ==  0.0
+  *          TRUE    ==  any other value
+  */
+ {
+  switch (op) {
+  case '+': return left+right;
+  case '-': return left-right;
+  case '*':  return left*right;
+  case '/':  if (right == 0.0) {
+               WritePosition (stderr, pos);
+               fprintf (stderr, " division by zero\n");
+               return 0.0;
+             } else {
+               return left/right;
+             }
+  case '^': return pow (left,right);
+  case '<': return left <  right;
+  case '>': return left >  right;
+  case '=': return left == right;
+  case '&': return left && right;
+  case '|': return left || right;
+  default:   	 FATAL_ERROR();
+  }
+ }
+
+ static double evalUnary (char op, double argument, tPosition pos)
+ /* compute "op argument" */
+ {
+  switch (op) {
+  case '-': return -argument;
+  case '+': return argument;
+  case '!': return argument == 0? 1 : 0;
+  default:  FATAL_ERROR();
+  }
+ }
+
+ static double evalFunction (tIdent name, double argument, tPosition pos)
+ {
+    if (name == id_sin) return sin (argument);
+    if (name == id_cos) return cos (argument);
+    if (name == id_tan) return tan (argument);
+    WritePosition (stderr, pos);
+    fprintf (stderr, " Illegal function name `%s'\n", GetCStr (name));
+    return 0.0;
+ }
+} // GLOBAL
+
+// ----------------------------------------------------------------------------
+
+PUBLIC PROCEDURE interpreteStmts (tree: [ STMTS,  EXPRS])
+
+/* - Evaluate the statement list (STMTS) passed to this routine.
+ * - If a list of expressions (EXPRS) is passed, evaluate the expressions
+ *   of the list and print the values to stdout.
+ */
+s:assign_stmt (Lhs := n:name (..))
+	:- storage [n::Ident] := evalExpr (s::Rhs);
+	   interpreteStmts (s::Next);
+	.
+s:if_stmt (..)
+	:- IF   evalExpr (s::Cond)
+	   THEN interpreteStmts (s::Then);
+	   ELSE interpreteStmts (s::Else);
+	   END
+	   interpreteStmts (s::Next);
+	.
+s:while_stmt (..)
+	:- WHILE evalExpr (s::Cond)
+	   DO
+              interpreteStmts (s::Body);
+	   END
+           interpreteStmts (s::Next);
+	.
+s:print_stmt (..)
+	:- interpreteStmts (s::Arguments);
+	   interpreteStmts (s::Next);
+	.
+l:exprs (Expr := e:EXPR (..))
+	:- WritePosition (stdout, e::Pos);
+	   printf (" ==> %-8.2f\n", evalExpr (e));
+	   interpreteStmts (l::Next);
+	.
+no_stmt  (..);
+no_exprs (..)
+	:- // nothing
+	.
+x	:- Message ("interpreteStmts: unknown tree", xxError, NoPosition);
+	   DrawTree (x);
+	.
+
+//-------------------------------------------------------------------------------------------------
+FUNCTION evalExpr (tree: EXPR) double
+/* Compute the "value" of the 'tree' aka as pocket calculator
+ * "boolean" values are represented as usual by C:
+ *    0.0 == false, everything else: true
+ */
+n:name (..)
+	:- RETURN storage [n::Ident];
+	.
+
+c:int_const (..)
+	:- RETURN {c::Value};  // here the target code curly braces are needed in order
+			       // stop PUMA complaining about "incompatible types"
+			       // The C-compiler will insert the type cast
+	.
+c:float_const (..)
+	:- RETURN c::Value;
+	.
+e:unary_expr (..)
+	:- RETURN evalUnary (e::Op, evalExpr (e::Argument), e::Pos);
+	.
+e:binary_expr (..)
+	:- RETURN evalBinary (e::Op, evalExpr (e::Left), evalExpr (e::Right), e::Pos);
+	.
+e:cond_expr (..)
+	:- RETURN evalExpr (e::Cond)
+                ? evalExpr (e::Then)
+                : evalExpr (e::Else);
+	.
+c:call_expr (Arguments := exprs (Expr := e, Next := no_exprs(..)))
+	:- RETURN evalFunction (c::Name, evalExpr (e), c::Pos);
+	.
+c:call_expr (..)
+	:- WritePosition (stderr, c::Pos);
+	   fprintf (stderr, " Wrong number of arguments for function `%s'\n", GetCStr (c::Name));
+	   RETURN 0.0;
+	.
+e:EXPR(..), ...
+	:- Message ("evalExpr: unknown tree", xxError, e::Pos);
+	   DrawTree (e);
+	   RETURN 0;
+	.
+//-----------------------------------------------------------------------------
+

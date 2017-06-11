@@ -1,0 +1,90 @@
+/* Project:  COCKTAIL training
+ * Descr:    Build an Abstract Syntax Tree for an expression language
+ * Kind:     AST specification
+ * Author:   Prof. Dr. Juergen Vollmer <vollmer@dhbw-karlsruhe.de>
+ * $Id: expr.ast.in,v 1.8 2010/04/26 16:25:42 vollmer Exp $
+ */
+MODULE abstract_syntax
+
+/* Exercises
+ *  - Extend the AST specification in expr.ast to represent the language
+ *    constructs defined in expr.pars
+ */
+TREE   Tree
+
+EXPORT {
+  # include "Position.h"
+  # include "Idents.h"
+
+  /* tIdent's for function names */
+  extern tIdent id_sin, id_cos, id_tan;
+} // EXPORT
+
+GLOBAL {
+  tIdent id_sin, id_cos, id_tan;
+} // GLOBAL
+
+BEGIN {
+  id_sin = MakeIdent1 ("sin");
+  id_cos = MakeIdent1 ("cos");
+  id_tan = MakeIdent1 ("tan");
+} // BEGIN
+
+PROPERTY INPUT
+
+RULE
+
+STMTS = <
+  no_stmt =
+	  .
+  STMT 	  = Next: STMTS REV
+            [Pos: tPosition] <
+    assign_stmt = Lhs: EXPR
+		  Rhs: EXPR
+		.
+    if_stmt     = Cond: EXPR
+		  Then: STMTS
+		  Else: STMTS
+		.
+    while_stmt  = Cond: EXPR
+		  Body: STMTS
+		.
+    print_stmt  = Arguments: EXPRS
+		.
+  > . // STMT
+> . // STMTS
+
+/* list of expressions */
+EXPRS = <
+  no_exprs	= /* end of list */
+		.
+  exprs		= Next: EXPRS   REV
+		  Expr: EXPR
+		.
+> .
+
+/* expressions */
+EXPR = [Pos: tPosition] <
+   int_const	= [Value: int]
+		.
+   float_const	= [Value: double]
+		.
+   name         = [Ident  : tIdent ]      /* variable */
+		.
+
+   unary_expr   = [Op     : char]   /* unary expressions */
+		  Argument: EXPR
+		.
+   binary_expr	= [Op  : char]      /* binary expressions */
+		  Left : EXPR
+		  Right: EXPR
+  		.
+   cond_expr    = Cond:  EXPR             /* conditional expressions */
+		  Then:  EXPR
+		  Else:  EXPR
+		.
+   call_expr    = [Name:     tIdent]      /* function call */
+		  Arguments: EXPRS
+		.
+> .
+END abstract_syntax
