@@ -112,6 +112,8 @@ INSERT RULES #STD#
 
 #STD# identLetter (identLetter | digit)*:
 {
+  expr_scan_Attribute.identifier.Ident =
+			MakeIdent (expr_scan_TokenPtr, expr_scan_TokenLength);
   return identifier;
 }
 

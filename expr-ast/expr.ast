@@ -37,9 +37,6 @@ GLOBAL {
 
 BEGIN {
   /* Target code to be placerd in the BeginTREE() function */
-  id_sin = MakeIdent1 ("sin");
-  id_cos = MakeIdent1 ("cos");
-  id_tan = MakeIdent1 ("tan");
 } // BEGIN
 
 CLOSE {
@@ -63,10 +60,13 @@ DECLS = <
 		.
 > .
 
-decl	  = Name: tIdent
-	    [Inout: char]
-	    [Type: char*]
+decl	  = [Name: tIdent]
+	    Inout: type
+	    Type: type
 	  .
+	  
+type = [Type: char]
+       .
 
 ANWS = <
   no_anws	= /* end of list */
@@ -125,7 +125,7 @@ FAKTOR = <
 bed = 
   Value1: FORMEL
   Value2: FORMEL
-  [CompOp: char]
+  CompOp: type
 .
 
 END abstract_syntax

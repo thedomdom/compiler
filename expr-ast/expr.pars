@@ -55,25 +55,31 @@ decl_l	= <
 
 decl   = <
 	= io:inout t:typ i:identifier
-	{tree: mdecl(io, t, i:Ident);}
+	{tree := mdecl(i:Ident, io:tree, t:tree);}
 	.
 > .
 
 inout = <
-	= 'INPUT' {String erstellen}
+	= 'INPUT'
+	{tree := mtype('i');}
 	. 
-	= 'OUTPUT' {String erstellen}
+	= 'OUTPUT'
+	{tree := mtype('i');}
 	.
 	= /* epsilon */
+	{tree := mtype('');}
 	.
 > .
 
 typ = <
-	= 'STRING' {String erstellen}
+	= 'STRING'
+	{tree := mtype('s');}
 	.
-	= 'INT' {String erstellen}
+	= 'INT'
+	{tree := mtype('i');}
 	.
-	= 'FLOAT' {String erstellen}
+	= 'FLOAT'
+	{tree := mtype('f');}
 	.
 > .
 
@@ -133,16 +139,19 @@ fordo   = <
 
 bed     = <
 	= l:formel c:compop r:formel
-	{tree:=mbed(l:tree, r:tree, c:Value);}
+	{tree:=mbed(l:tree, r:tree, c:tree);}
 	.
 > .
 
 compop  = <
-	= '>' {String erstellen}
+	= '>'
+	{tree := mtype('>');}
 	.
-	= '<' {String erstellen}
+	= '<'
+	{tree := mtype('<');}
 	.
-	= '==' {String erstellen}
+	= '=='
+	{tree := mtype('==');}
 	.
 > .
 
@@ -191,10 +200,10 @@ faktor  = <
 	{tree := mfloat_const (c:Position, c:Value);}
 	.
 	= c:string_const
-	{tree := mstring_const (c:Position, c);}
+	{tree := mstring_const (c:Value);}
 	.
 	= i:identifier
-	{tree := mstring_const (i:Position, i);}
+	{tree := midentifier (i:Ident);}
 	.
 	= '(' formel ')' //Copy-Regel
 	.
@@ -203,10 +212,10 @@ faktor  = <
 /* Tokens */
 int_const:    [Value: long]   {Value := 0;  } .
 float_const:  [Value: double] {Value := 0.0;} .
-string_const: [Value: tIdent] {Value := NoIdent;} . //Datentyp?
-identifier:   [Ident: tIdent] {Ident := NoIdent; } .
+string_const: [Value: tIdent] {Value := NoIdent;} .
+identifier:   [Ident: tIdent] {Ident := NoIdent;} .
 
-/* non-terminal attributes */
+/* attributes */
 MODULE attributes
 PROPERTY SYN
 DECLARE
@@ -214,18 +223,20 @@ DECLARE
  decl_l
  decls
  decl
+ inout
+ typ
  codeblock
  anw_l
  anws
  anw 
+ zuwe
  ifelse
  whiledo 
  fordo
  bed
  compop
- zuwe
  formel
  term
  negfak
- faktor= [tree: tTree].
+ faktor = [tree: tTree].
 END attributes
