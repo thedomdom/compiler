@@ -83,15 +83,15 @@ ANW = <
 	       Value: EXPR
 	       .
   ifelse =     Condition: bed
-	       Body: ANW_L
-	       Else: ANW_L
+	       Body: ANWS
+	       Else: ANWS
 	       .
   fordo =      Condition: bed
 	       Increment: assignment
-	       Body: ANW_L
+	       Body: ANWS
 	       .
   Whiledo =    Condition: bed
-	       Body: ANW_L
+	       Body: ANWS
 	       .
 >.
 

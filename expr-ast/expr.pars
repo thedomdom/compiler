@@ -42,7 +42,7 @@ decl_l	= <
 	= d:decl
 	  {tree := mdecls (mno_decls(), d:tree);}
 	.
-	= l:decls ',' d:decl
+	= l:decls d:decl
 	  // left recursive list
 	  {tree := mdecls (l:tree, d:tree);}
 	.
@@ -50,7 +50,7 @@ decl_l	= <
 > . /* decl_l */
 
 decl   = <
-	= io:inout t:typ i:identifier
+	= io:inout t:typ i:identifier ';'
 	{tree := mdecl(i:Position, i:Ident, io:tree, t:tree);}
 	.
 > .
@@ -92,7 +92,7 @@ anw_l	= <
 	= a:anw
 	  {tree := manws (mno_anws(), a:tree);}
 	.
-	= l:anws ',' a:anw
+	= l:anws a:anw
 	  // left recursive list
 	  {tree := manws (l:tree, a:tree);}
 	.
@@ -128,8 +128,8 @@ ifelse = <
 
 whiledo = <
 	= 'WHILE' b:bed 'DO' c:codeblock 'ENDWHILE.'
-	{tree:=mifelse(b:tree, c:tree, mno_anws());}
-	// 	{tree:=mwhiledo(b:tree, c:tree);}
+// 	{tree:=mifelse(b:tree, c:tree, mno_anws());}
+	{tree:=mwhiledo(b:tree, c:tree);}
 	.
 > .
 
