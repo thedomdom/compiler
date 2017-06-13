@@ -21,10 +21,6 @@ GLOBAL {
  # include "Tree.h"
 }
 
-PREC LEFT '<' '>' '=='
-     LEFT  '+' '-'
-     LEFT  '*' '/'
-
 RULE
 
 root 	= sprache_x
@@ -33,7 +29,7 @@ root 	= sprache_x
 
 sprache_x = <
 	= 'PROGRAM' i:identifier 'DECLARATIONS' d:decl_l c:codeblock
-	   {tree:=mprogram(i:Ident, d:tree, c:tree);}
+	   {tree:= mprogram('PROGRAM':Position, i:Ident, d:tree, c:tree);}
 	.
 > .
 
@@ -55,7 +51,7 @@ decl_l	= <
 
 decl   = <
 	= io:inout t:typ i:identifier
-	{tree := mdecl(i:Ident, io:tree, t:tree);}
+	{tree := mdecl(i:Position, i:Ident, io:tree, t:tree);}
 	.
 > .
 
@@ -64,10 +60,10 @@ inout = <
 	{tree := mtype('i');}
 	. 
 	= 'OUTPUT'
-	{tree := mtype('i');}
+	{tree := mtype('o');}
 	.
 	= /* epsilon */
-	{tree := mtype('');}
+	{tree := mtype(' ');}
 	.
 > .
 
@@ -114,6 +110,12 @@ anw    = < //Copy-Regel?
       .
 > .
 
+zuwe    = <
+	= i:identifier '=' f:formel ';'
+	{tree:=massignment(i:Ident, f:tree);}
+	.
+> .
+
 
 ifelse = <
 	= 'IF' b:bed 'THEN' t:codeblock 'ENDIF.'
@@ -126,7 +128,8 @@ ifelse = <
 
 whiledo = <
 	= 'WHILE' b:bed 'DO' c:codeblock 'ENDWHILE.'
-	{tree:=mwhiledo(b:tree, c:tree);}
+	{tree:=mifelse(b:tree, c:tree, mno_anws());}
+	// 	{tree:=mwhiledo(b:tree, c:tree);}
 	.
 > .
 
@@ -151,13 +154,7 @@ compop  = <
 	{tree := mtype('<');}
 	.
 	= '=='
-	{tree := mtype('==');}
-	.
-> .
-
-zuwe    = <
-	= i:identifier '=' f:formel ';'
-	{tree:=massignment(i, f:tree);}
+	{tree := mtype('=');}
 	.
 > .
 
@@ -165,10 +162,10 @@ formel  = <
 	= term //Copy-Regel?
 	.
 	= l:formel '+' r:term
-	{tree:=msumme(l:tree, r:tree);}
+	{tree:=mbinary_expr('+':Position, '+', l:tree, r:tree);}
 	.
 	= l:formel '-' r:term
-	{tree:=mdifferenz(l:tree, r:tree);}
+	{tree:=mbinary_expr('-':Position, '-', l:tree, r:tree);}
 	.
 > .
 
@@ -176,19 +173,21 @@ term    = <
 	= negfak //Copy
 	.
 	= l:term '*' r:negfak
-	{tree:=mmultiplikation(l:tree, r:tree);}
+	{tree:=mbinary_expr('*':Position, '*', l:tree, r:tree);}
 	.
 	= l:term '/' r:negfak
-	{tree:=mdivision(l:tree, r:tree);}
+	{tree:=mbinary_expr('/':Position, '/', l:tree, r:tree);}
 	.
 > .
 
 negfak  = <
-	= f:faktor //Copy-Regel?
-	{tree:=mnegfak(f:tree, '+');}
+	= f:faktor //Copy-Regel
+	.
+	= '+' f:faktor //Copy-Regel
+	{tree:=munary_expr('+':Position, '+', f:tree);}
 	.
 	= '-' f:faktor
-	{tree:=mnegfak(f:tree, '-');}
+	{tree:=munary_expr('-':Position, '-', f:tree);}
 	.
 >.
 
@@ -200,10 +199,10 @@ faktor  = <
 	{tree := mfloat_const (c:Position, c:Value);}
 	.
 	= c:string_const
-	{tree := mstring_const (c:Value);}
+	{tree := mstring_const (c:Position, c:Value);}
 	.
 	= i:identifier
-	{tree := midentifier (i:Ident);}
+	{tree := midentifier (i:Position, i:Ident);}
 	.
 	= '(' formel ')' //Copy-Regel
 	.
@@ -221,13 +220,11 @@ PROPERTY SYN
 DECLARE
  sprache_x
  decl_l
- decls
  decl
  inout
  typ
  codeblock
  anw_l
- anws
  anw 
  zuwe
  ifelse

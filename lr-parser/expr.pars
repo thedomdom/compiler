@@ -26,9 +26,6 @@ GLOBAL {
  # include <stdio.h>
 }
 
-PREC LEFT '<' '>' '=='
-     LEFT  '+' '-'
-     LEFT  '*' '/'
 
 RULE
 

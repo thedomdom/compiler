@@ -48,20 +48,22 @@ PROPERTY INPUT  /* all attributes are parameters of the generate the mXX() routi
 RULE  /* Here we define the node types */
 
 program = [Pos: tPosition]
-          Declaration: DECL_L
-          Body: ANW_L
+	  [Name: tIdent]
+          Declaration: DECLS
+          Body: ANWS
           .
           
 DECLS = <
   no_decls	= /* end of list */
 		.
-  decls		= Next: DECLS
+  decls		= Next: DECLS REV
 		  Decl: decl
 		.
 > .
 
-decl	  = [Name: tIdent]
-	    Inout: type
+decl	  = [Pos: tPosition]
+	    [Name: tIdent]
+	    InOut: type
 	    Type: type
 	  .
 	  
@@ -71,60 +73,49 @@ type = [Type: char]
 ANWS = <
   no_anws	= /* end of list */
 		.
-  anws		= Next: ANWS
+  anws		= Next: ANWS REV
 		  Anw: ANW
 		.
 > .
 	  
 ANW = <
-  assignment = Var_name: tIdent
-	       Value: FORMEL
+  assignment = [Var_name: tIdent]
+	       Value: EXPR
 	       .
   ifelse =     Condition: bed
 	       Body: ANW_L
 	       Else: ANW_L
 	       .
-  Whiledo =    Condition: bed
-	       Body: ANW_L
-	       .
   fordo =      Condition: bed
 	       Increment: assignment
 	       Body: ANW_L
 	       .
+  Whiledo =    Condition: bed
+	       Body: ANW_L
+	       .
 >.
 
 
 
-FAKTOR = <
+EXPR = [Pos: tPosition] <
   int_const	= [Value: int].
   float_const   = [Value: double].
   identifier    = [Ident: tIdent].
   string_const  = [Value: tIdent].
-  
-  FORMEL = <
-    TERM = <
-      negfak = 	     Factor: FAKTOR
-		     [Op: char]
-		      .
-      multiplikation = Value1: TERM
-		      Value2: negfak
-		      .
-      division       = Value1: TERM
-		      Value2: negfak
-		      .
-    >.
-    summe = Value1: FORMEL
-	    Value2: TERM
-	    .
-    differenz = Value1: FORMEL
-		Value2: TERM
-		.
-  >.
+
+   binary_expr	= [Op  : char ]     /* binary expressions */
+		  Left : EXPR
+		  Right: EXPR
+		  .
+		  
+   unary_expr	= [Op  : char ]     /* unary expressions */
+		  Arg  : EXPR
+		  .  
 >.
 
 bed = 
-  Value1: FORMEL
-  Value2: FORMEL
+  Value1: EXPR
+  Value2: EXPR
   CompOp: type
 .
 
